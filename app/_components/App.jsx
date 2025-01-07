@@ -17,6 +17,8 @@ const RecipeCard = ({ onSubmit }) => {
   const [cuisine, setCuisine] = useState("");
   const [cookingTime, setCookingTime] = useState("");
   const [complexity, setComplexity] = useState("");
+  const [age, setAge] = useState("");
+
 
   const handleSubmit = () => {
     const recipeData = {
@@ -25,6 +27,7 @@ const RecipeCard = ({ onSubmit }) => {
       cuisine,
       cookingTime,
       complexity,
+      age
     };
     onSubmit(recipeData);
   };
@@ -119,6 +122,22 @@ const RecipeCard = ({ onSubmit }) => {
             <option value="mesomorph">Mesomorph</option>
           </select>
         </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-700 text-sm font-bold mb-2"
+            htmlFor="age"
+          >
+            Age
+          </label>
+         <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="age"
+            type="number"
+            placeholder="Enter Age"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
+        </div>
         <div className="px-6 py-4 text-center">
           <Button
             className=" hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline"
@@ -142,7 +161,7 @@ function App() {
 
     try {
       const queryParams = new URLSearchParams(data).toString();
-      const response = await fetch(`https://nutribotbackend.vercel.app/recipeStream?${queryParams}`);
+      const response = await fetch(`http://localhost:3001/recipeStream?${queryParams}`);
 
       if (response.ok) {
         const result = await response.json();
@@ -157,12 +176,12 @@ function App() {
   }
 
   return (
-    <div className=" min-h-screen flex flex-col items-center  ">
+    <div className=" min-h-screen flex flex-col items-center -mt-10  ">
     <div className="flex flex-col md:flex-col h-full my-4 gap-6 justify-center items-start  md:w-[300px]">
       <RecipeCard onSubmit={onSubmit} />
      
       <Dialog>
-  <DialogTrigger asChild><Button className={'ml-[60px]'}>Open Generated Plan</Button></DialogTrigger>
+  <DialogTrigger asChild><Button className={'ml-[60px] relative -top-[40px]'}>Open Generated Plan</Button></DialogTrigger>
   <DialogContent>
     <DialogHeader>
       <DialogTitle></DialogTitle>
