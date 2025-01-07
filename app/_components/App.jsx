@@ -157,7 +157,7 @@ function App() {
   }
 
   return (
-    <div className=" min-h-screen flex flex-col items-center py-10 ">
+    <div className=" min-h-screen flex flex-col items-center  ">
     <div className="flex flex-col md:flex-col h-full my-4 gap-6 justify-center items-start  md:w-[300px]">
       <RecipeCard onSubmit={onSubmit} />
      

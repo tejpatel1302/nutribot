@@ -28,6 +28,6 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "app/_components/SubCategory.jsx"  ],
   "exclude": ["node_modules", ".next"]
 }
