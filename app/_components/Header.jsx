@@ -15,6 +15,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import App from './App'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
   
 
 const Header = () => {
@@ -27,12 +28,12 @@ const Header = () => {
                 <DropdownMenu>
   <DropdownMenuTrigger asChild><h2 className='md:flex hidden cursor-pointer gap-2 border-2 border-gray-50 bg-slate-200 p-2 px-10 rounded-full'>
                     <LayoutGrid className='h-5 w-5'/>
-                    Category
+                    Features
                 </h2></DropdownMenuTrigger>
   <DropdownMenuContent>
-    <DropdownMenuLabel>Category</DropdownMenuLabel>
+    <DropdownMenuLabel>Features</DropdownMenuLabel>
     <DropdownMenuSeparator />
-    <DropdownMenuItem>Drinks</DropdownMenuItem>
+    <DropdownMenuItem>Customised Diet Plan / Growth Chart</DropdownMenuItem>
   
   </DropdownMenuContent>
 </DropdownMenu>
@@ -45,18 +46,19 @@ const Header = () => {
         </div>
         <div className='flex gap-2'>
            <h2 className='flex gap-2 items-center'> <ShoppingBag/> 0</h2>
-            <Sheet>
-  <SheetTrigger asChild>
-  <Button>Generate Plan</Button></SheetTrigger>
-  <SheetContent>
-    <SheetHeader>
-      <SheetTitle></SheetTitle>
-      <SheetDescription asChild>
-      <App/>
-      </SheetDescription>
-    </SheetHeader>
-  </SheetContent>
-</Sheet>
+           <Dialog>
+  <DialogTrigger asChild className="w-full">
+    <Button>Generate Plan</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle></DialogTitle>
+      <DialogDescription asChild>
+        <App />
+      </DialogDescription>
+    </DialogHeader>
+  </DialogContent>
+</Dialog>
 
             <Button>Login</Button>
         </div>

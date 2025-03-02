@@ -7,8 +7,8 @@ import {
     CarouselPrevious,
   } from "@/components/ui/carousel"
 import Image from 'next/image'
-import image from '../../public/image2.png'
-import image2 from '../../public/image.png'
+import image from '../../public/banner.webp'
+import image2 from '../../public/banner2webp.webp'
   
   
 
