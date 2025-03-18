@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
   weight: z.string().min(1, { message: "Weight is required" }),
@@ -57,6 +58,7 @@ const formSchema = z.object({
 })
 
 export default function NutriBot() {
+ 
   const [dietPlanText, setDietPlanText] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -78,7 +80,7 @@ export default function NutriBot() {
       fitnessGoals: "",
     },
   })
-
+  
   async function onSubmit(data) {
     setIsLoading(true);
     setDietPlanText("Generating your personalized nutrition plan...");
@@ -90,10 +92,12 @@ export default function NutriBot() {
       
       if (response.ok) {
         const result = await response.json();
-        const plan = result?.dietPlan || "No diet plan generated.";
+        const plan = result || "No diet plan generated.";
+        console.log(result,'mmm')
         setDietPlanText(plan);
         // Store the plan in local storage for later use
-        localStorage.setItem("dietPlan", plan);
+        localStorage.setItem('dietPlan', JSON.stringify(plan));
+
         localStorage.setItem("gender", data.gender)      // "male" / "female" / ...
         localStorage.setItem("userAge", data.age)        // e.g. "5"
         localStorage.setItem("userHeight", data.height)  // e.g. "110" (cm)
@@ -108,14 +112,14 @@ export default function NutriBot() {
     }
   }
   
-
+ 
   return (
     <div className="container mx-auto py-10 px-4 ">
       <Card className="border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <Utensils className="h-6 w-6 text-primary" />
-            <CardTitle className="text-2xl font-bold">NutriBot</CardTitle>
+            <CardTitle  className="text-2xl font-bold">NutriBot</CardTitle>
           </div>
           <CardDescription>
             Get personalized nutrition plans based on your health profile and goals

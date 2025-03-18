@@ -13,9 +13,11 @@ import {
 
 import GrowthChartBoys from "./GrowthChartBoys"
 import GrowthChartGirls from "./GrowthChartGirls"
+import { useRouter } from "next/navigation"
 
 export default function FeaturesList() {
   // For the Customized Diet Plan modal
+  const router = useRouter();
   const [isDietPlanModalOpen, setIsDietPlanModalOpen] = useState(false)
   const [dietPlan, setDietPlan] = useState("")
 
@@ -57,7 +59,7 @@ export default function FeaturesList() {
       alert("No diet plan found. Please generate one in NutriBot first.")
       return
     }
-    setIsDietPlanModalOpen(true)
+  router.push('/test')
   }
 
   // Handle "Growth Chart" click
@@ -105,7 +107,8 @@ export default function FeaturesList() {
             <DialogTitle>Your Customized Diet Plan</DialogTitle>
           </DialogHeader>
           <div className="p-4 border rounded-lg bg-card overflow-y-auto max-h-[60vh] text-sm text-foreground">
-            { <div dangerouslySetInnerHTML={{ __html: dietPlan }} /> || "No diet plan found."}
+            {/* { <div dangerouslySetInnerHTML={{ __html: dietPlan }} /> || "No diet plan found."} */}
+            {dietPlan}
           </div>
         </DialogContent>
       </Dialog>

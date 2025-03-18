@@ -16,13 +16,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from '@/components/ui/button'
 import App from './App'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import AuthDialog from './Login_Registartion'
+import { useRouter } from 'next/navigation'
   
 
 const Header = () => {
+  const router = useRouter();
+  const handleRedirect = () => {
+    router.push("/"); // Redirect to a different page
+  };
   return (
     <div className='p-5 shadow-md flex justify-between'>
         <div className='flex items-center gap-8 '>
-            <div className='text-2xl font-bold text-green-600'>NutriBot</div>
+            <div className='text-2xl font-bold text-green-600 cursor-pointer' onClick={handleRedirect} >NutriBot</div>
             <div>
                 
                 <DropdownMenu>
@@ -60,7 +66,7 @@ const Header = () => {
   </DialogContent>
 </Dialog>
 
-            <Button>Login</Button>
+           <AuthDialog/>
         </div>
     </div>
   )
