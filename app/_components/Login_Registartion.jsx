@@ -225,7 +225,7 @@ console.log(isLoggedIn,'hi')
       ) : (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>Login / Register</Button>
+            <Button>Login</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
