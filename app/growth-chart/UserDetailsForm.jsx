@@ -5,20 +5,23 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+// import { format } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
+// import { Calendar } from "@/components/ui/calendar"
 
 const formSchema = z.object({
   height: z.string().min(1, "Height is required"),
   weight: z.string().min(1, "Weight is required"),
   role: z.string().min(1, "Role is required"),
-  date: z.date(),
+  date: z.preprocess((a) => {
+    if (typeof a === "string") return new Date(a)
+    if (a instanceof Date) return a
+  }, z.date()),
   age: z.string().optional(),
 })
 
@@ -33,7 +36,10 @@ export default function UserDetailsForm({ initialData, onSubmit }) {
       height: initialData?.height || "",
       weight: initialData?.weight || "",
       role: initialData?.role || "child-male",
-      date: initialData?.date ? new Date(initialData.date) : new Date(),
+      // Format the date as YYYY-MM-DD for the date input
+      date: initialData?.date
+        ? initialData.date
+        : new Date().toISOString().split("T")[0],
       age: initialData?.age || "",
     },
   })
@@ -47,7 +53,7 @@ export default function UserDetailsForm({ initialData, onSubmit }) {
     // Convert the date to string format for storage
     const formattedValues = {
       ...values,
-      date: values.date.toISOString().split("T")[0],
+      date: values?.date.toISOString().split("T")[0],
     }
     onSubmit(formattedValues)
   }
@@ -141,16 +147,14 @@ export default function UserDetailsForm({ initialData, onSubmit }) {
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={`w-full pl-3 text-left font-normal ${!field.value ? "text-muted-foreground" : ""}`}
-                      >
-                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
+                      <Input
+                        type="date"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  {/* <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={field.value}
@@ -158,7 +162,7 @@ export default function UserDetailsForm({ initialData, onSubmit }) {
                       disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                       initialFocus
                     />
-                  </PopoverContent>
+                  </PopoverContent> */}
                 </Popover>
                 <FormDescription>The date when measurements were taken</FormDescription>
                 <FormMessage />
@@ -174,4 +178,3 @@ export default function UserDetailsForm({ initialData, onSubmit }) {
     </div>
   )
 }
-
