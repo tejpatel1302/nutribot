@@ -18,9 +18,10 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Toaster, toast } from 'sonner'
+import { toast } from "sonner"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Validation schemas
 const loginSchema = z.object({
@@ -34,11 +35,31 @@ const registerSchema = z
     email: z.string().email({ message: "Please enter a valid email address" }),
     password: z.string().min(6, { message: "Password must be at least 6 characters" }),
     confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+    role: z.enum(["adult", "kid"], { message: "Please select a role" }),
+    // Kid profile fields (optional based on role)
+    kidName: z.string().optional(),
+    kidDob: z.string().optional(),
+    kidBirthWeight: z.string().optional(),
+    kidBirthHeight: z.string().optional(),
+    kidHealthCondition: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   })
+  .refine(
+    (data) => {
+      // If role is kid, kid profile fields are required
+      if (data.role === "kid") {
+        return !!data.kidName && !!data.kidDob
+      }
+      return true
+    },
+    {
+      message: "Kid name and date of birth are required for kid profiles",
+      path: ["kidName"],
+    },
+  )
 
 // Function to decode JWT token
 function decodeJWT(token) {
@@ -68,7 +89,8 @@ export default function AuthDialog() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userEmail, setUserEmail] = useState("")
   const [userInitial, setUserInitial] = useState("")
-//   const { toast } = useToast()
+  const [selectedRole, setSelectedRole] = useState("adult")
+  //   const { toast } = useToast()
 
   // Check if user is already logged in on component mount
   useEffect(() => {
@@ -100,6 +122,12 @@ export default function AuthDialog() {
       email: "",
       password: "",
       confirmPassword: "",
+      role: "adult",
+      kidName: "",
+      kidDob: "",
+      kidBirthWeight: "",
+      kidBirthHeight: "",
+      kidHealthCondition: "",
     },
   })
 
@@ -150,12 +178,27 @@ export default function AuthDialog() {
     }
   }
 
+  // Handle role change:
+  const handleRoleChange = (value) => {
+    setSelectedRole(value)
+    registerForm.setValue("role", value)
+  }
+
   // Handle registration submission
   async function onRegisterSubmit(data) {
     setIsLoading(true)
     try {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...registerData } = data
+
+      // If role is not kid, remove kid profile fields
+      if (registerData.role !== "kid") {
+        delete registerData.kidName
+        delete registerData.kidDob
+        delete registerData.kidBirthWeight
+        delete registerData.kidBirthHeight
+        delete registerData.kidHealthCondition
+      }
 
       const response = await fetch("http://localhost:8080/api/v1/user/signup", {
         method: "POST",
@@ -202,7 +245,7 @@ export default function AuthDialog() {
       description: "You have been logged out successfully.",
     })
   }
-console.log(isLoggedIn,'hi')
+  console.log(isLoggedIn, "hi")
   return (
     <>
       {isLoggedIn ? (
@@ -232,7 +275,7 @@ console.log(isLoggedIn,'hi')
               <DialogTitle>Account</DialogTitle>
               <DialogDescription>Login to your account or create a new one.</DialogDescription>
             </DialogHeader>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-h-96 overflow-y-scroll">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -283,9 +326,9 @@ console.log(isLoggedIn,'hi')
               </TabsContent>
 
               {/* Register Form */}
-              <TabsContent value="register">
-                <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 py-4">
+              <TabsContent value="register" >
+                <Form {...registerForm} >
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 py-4 ">
                     <FormField
                       control={registerForm.control}
                       name="name"
@@ -312,6 +355,99 @@ console.log(isLoggedIn,'hi')
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={registerForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Role</FormLabel>
+                          <Select onValueChange={(value) => handleRoleChange(value)} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="adult">Adult</SelectItem>
+                              <SelectItem value="kid">Kid</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {selectedRole === "kid" && (
+                      <div className="space-y-4 border p-4 rounded-md">
+                        <h3 className="font-medium">Kid Profile</h3>
+                        <FormField
+                          control={registerForm.control}
+                          name="kidName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Kid's Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Kid's name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="kidDob"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Date of Birth</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="kidBirthWeight"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Birth Weight (kg)</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="0.01" placeholder="3.5" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="kidBirthHeight"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Birth Height (cm)</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="0.1" placeholder="50" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="kidHealthCondition"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Health Conditions (if any)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Any health conditions" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+
                     <FormField
                       control={registerForm.control}
                       name="password"

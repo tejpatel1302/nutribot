@@ -740,7 +740,7 @@ export default function WeightLossPlan() {
 
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <Label htmlFor="meal-count">Number of Snacks</Label>
+                  <Label htmlFor="meal-count">Number of Meals</Label>
                   <span className="text-sm text-muted-foreground">{mealPreferences.mealCount}</span>
                 </div>
                 <Slider

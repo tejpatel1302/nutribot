@@ -68,7 +68,7 @@ export default function FeaturesList() {
       alert("Gender not found. Please fill out NutriBot form first.")
       return
     }
-    setIsGrowthChartModalOpen(true)
+    router.push('/growth-chart')
   }
 
   return (

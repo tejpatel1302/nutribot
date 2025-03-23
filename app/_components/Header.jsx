@@ -17,11 +17,15 @@ import { Button } from '@/components/ui/button'
 import App from './App'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import AuthDialog from './Login_Registartion'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter} from 'next/navigation'
+
   
 
 const Header = () => {
   const router = useRouter();
+  const pathname = usePathname();
+ 
+    console.log(pathname,'url')
   const handleRedirect = () => {
     router.push("/"); // Redirect to a different page
   };
@@ -54,7 +58,7 @@ const Header = () => {
            <h2 className='flex gap-2 items-center'> <ShoppingBag/> 0</h2>
            <Dialog>
   <DialogTrigger asChild className="w-full">
-    <Button>Generate Plan</Button>
+   {pathname == '/' && <Button>Generate Plan</Button>}
   </DialogTrigger>
   <DialogContent>
     <DialogHeader>

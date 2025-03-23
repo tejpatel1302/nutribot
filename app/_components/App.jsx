@@ -4,128 +4,161 @@ import React, { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Apple, ArrowRight, Dumbbell, Salad, Utensils } from 'lucide-react'
+import { Apple, ArrowRight, Dumbbell, Salad, Utensils } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useRouter } from "next/navigation"
+import { Checkbox } from "@/components/ui/checkbox"
+
+const healthConditions = [
+  { id: "type2diabetes", label: "Type 2 Diabetes" },
+  { id: "bloodpressure", label: "Blood Pressure" },
+  { id: "cholesterol", label: "Cholesterol" },
+  { id: "obesity", label: "Obesity" },
+  { id: "other", label: "Other" },
+]
+
+const allergens = [
+  { id: "milk", label: "Milk" },
+  { id: "peanuts", label: "Peanuts" },
+  { id: "fish", label: "Fish" },
+  { id: "wheat", label: "Wheat" },
+  { id: "egg", label: "Egg" },
+  { id: "soy", label: "Soy" },
+  { id: "other", label: "Other" },
+]
+
+const dietaryPreferences = [
+  { id: "vegetarian", label: "Vegetarian" },
+  { id: "non-vegetarian", label: "Non-Vegetarian" },
+  { id: "vegan", label: "Vegan" },
+  { id: "keto", label: "Keto" },
+  { id: "paleo", label: "Paleo" },
+  { id: "mediterranean", label: "Mediterranean" },
+  { id: "glutenfree", label: "Gluten-Free" },
+  { id: "dairyfree", label: "Dairy-Free" },
+]
+
+const bodyTypeDescriptions = {
+  ectomorph: "Lean and slender body type with difficulty gaining weight",
+  endomorph: "Rounded and stocky body type with a tendency to store fat",
+  mesomorph: "Athletic and muscular body type that gains muscle easily",
+}
 
 const formSchema = z.object({
   weight: z.string().min(1, { message: "Weight is required" }),
   height: z.string().min(1, { message: "Height is required" }),
-  disease: z.string().optional(),
+  healthConditions: z.array(z.string()).optional(),
+  otherHealthCondition: z.string().optional(),
   gender: z.string().min(1, { message: "Gender is required" }),
   bodyType: z.string().min(1, { message: "Body type is required" }),
   age: z.string().min(1, { message: "Age is required" }),
   activityLevel: z.string().min(1, { message: "Activity level is required" }),
-  dietaryPreferences: z.string().min(1, { message: "Dietary preference is required" }),
-  dietaryRestrictions: z.string().optional(),
+  dietaryPreferences: z.array(z.string()).min(1, { message: "At least one dietary preference is required" }),
+  religiousRestrictions: z.string().optional(),
   budgetConstraints: z.string().min(1, { message: "Budget constraint is required" }),
-  foodAllergies: z.string().optional(),
+  allergens: z.array(z.string()).optional(),
+  otherAllergen: z.string().optional(),
   fitnessGoals: z.string().min(1, { message: "Fitness goal is required" }),
 })
 
 export default function NutriBot() {
- 
   const [dietPlanText, setDietPlanText] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showOtherHealthCondition, setShowOtherHealthCondition] = useState(false)
+  const [showOtherAllergen, setShowOtherAllergen] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       weight: "",
       height: "",
-      disease: "",
+      healthConditions: [],
+      otherHealthCondition: "",
       gender: "",
       bodyType: "",
       age: "",
       activityLevel: "",
-      dietaryPreferences: "",
-      dietaryRestrictions: "",
+      dietaryPreferences: [],
+      religiousRestrictions: "",
       budgetConstraints: "",
-      foodAllergies: "",
+      allergens: [],
+      otherAllergen: "",
       fitnessGoals: "",
     },
   })
-  
-  async function onSubmit(data) {
-    setIsLoading(true);
-    setDietPlanText("Generating your personalized nutrition plan...");
-    setIsDialogOpen(true);
-    
-    try {
-      const queryParams = new URLSearchParams(data).toString();
-      const response = await fetch(`http://localhost:3001/dietPlan?${queryParams}`);
-      
-      if (response.ok) {
-        const result = await response.json();
-        const plan = result || "No diet plan generated.";
-        console.log(result,'mmm')
-        setDietPlanText(plan);
-        // Store the plan in local storage for later use
-        localStorage.setItem('dietPlan', JSON.stringify(plan));
 
-        localStorage.setItem("gender", data.gender)      // "male" / "female" / ...
-        localStorage.setItem("userAge", data.age)        // e.g. "5"
-        localStorage.setItem("userHeight", data.height)  // e.g. "110" (cm)
+  // Watch for changes to healthConditions and allergens to show/hide "other" text fields
+  const watchedHealthConditions = form.watch("healthConditions")
+  const watchedAllergens = form.watch("allergens")
+
+  React.useEffect(() => {
+    setShowOtherHealthCondition(watchedHealthConditions?.includes("other") || false)
+  }, [watchedHealthConditions])
+
+  React.useEffect(() => {
+    setShowOtherAllergen(watchedAllergens?.includes("other") || false)
+  }, [watchedAllergens])
+
+  async function onSubmit(data) {
+    setIsLoading(true)
+    setDietPlanText("Generating your personalized nutrition plan...")
+    setIsDialogOpen(true)
+
+    try {
+      // Format the data for the API
+      const formattedData = {
+        ...data,
+        healthConditions: data.healthConditions.includes("other")
+          ? [...data.healthConditions.filter((item) => item !== "other"), data.otherHealthCondition]
+          : data.healthConditions,
+        allergens: data.allergens?.includes("other")
+          ? [...data.allergens.filter((item) => item !== "other"), data.otherAllergen]
+          : data.allergens,
+      }
+
+      const queryParams = new URLSearchParams(formattedData).toString()
+      const response = await fetch(`http://localhost:3001/dietPlan?${queryParams}`)
+
+      if (response.ok) {
+        const result = await response.json()
+        const plan = result || "No diet plan generated."
+        console.log(result, "mmm")
+        setDietPlanText(plan)
+        // Store the plan in local storage for later use
+        localStorage.setItem("dietPlan", JSON.stringify(plan))
+
+        localStorage.setItem("gender", data.gender) // "male" / "female" / ...
+        localStorage.setItem("userAge", data.age) // e.g. "5"
+        localStorage.setItem("userHeight", data.height) // e.g. "110" (cm)
       } else {
-        setDietPlanText("Error: Unable to fetch diet plan. Please try again later.");
+        setDietPlanText("Error: Unable to fetch diet plan. Please try again later.")
       }
     } catch (error) {
-      console.error("Error fetching diet plan:", error);
-      setDietPlanText("Error: Unable to fetch diet plan. Please check your connection and try again.");
+      console.error("Error fetching diet plan:", error)
+      setDietPlanText("Error: Unable to fetch diet plan. Please check your connection and try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
-  
- 
+
   return (
-    <div className="container mx-auto py-10 px-4 ">
+    <div className="max-h-[600px]  overflow-y-scroll mx-auto py-10 px-4 ">
       <Card className="border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <Utensils className="h-6 w-6 text-primary" />
-            <CardTitle  className="text-2xl font-bold">NutriBot</CardTitle>
+            <CardTitle className="text-2xl font-bold">NutriBot</CardTitle>
           </div>
-          <CardDescription>
-            Get personalized nutrition plans based on your health profile and goals
-          </CardDescription>
+          <CardDescription>Get personalized nutrition plans based on your health profile and goals</CardDescription>
         </CardHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Tabs defaultValue="personal" className="w-full">
@@ -143,7 +176,7 @@ export default function NutriBot() {
                   <span>Goals</span>
                 </TabsTrigger>
               </TabsList>
-              
+
               <CardContent>
                 <TabsContent value="personal" className="space-y-4 mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -160,7 +193,7 @@ export default function NutriBot() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="height"
@@ -175,7 +208,7 @@ export default function NutriBot() {
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -190,7 +223,7 @@ export default function NutriBot() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="gender"
@@ -214,7 +247,7 @@ export default function NutriBot() {
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -229,16 +262,17 @@ export default function NutriBot() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="ectomorph">Ectomorph</SelectItem>
-                              <SelectItem value="endomorph">Endomorph</SelectItem>
-                              <SelectItem value="mesomorph">Mesomorph</SelectItem>
+                              <SelectItem value="ectomorph">Ectomorph (lean and slender)</SelectItem>
+                              <SelectItem value="endomorph">Endomorph (rounded and stocky)</SelectItem>
+                              <SelectItem value="mesomorph">Mesomorph (athletic and muscular)</SelectItem>
                             </SelectContent>
                           </Select>
+                          <FormDescription>{field.value && bodyTypeDescriptions[field.value]}</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="activityLevel"
@@ -263,94 +297,178 @@ export default function NutriBot() {
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
-                    name="disease"
-                    render={({ field }) => (
+                    name="healthConditions"
+                    render={() => (
                       <FormItem>
-                        <FormLabel>Medical Conditions</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter any medical conditions or diseases (e.g., diabetes, hypertension)" 
-                            className="resize-none" 
-                            {...field} 
+                        <div className="mb-4">
+                          <FormLabel className="text-base">Health Conditions</FormLabel>
+                          <FormDescription>Select any health conditions that apply to you</FormDescription>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {healthConditions.map((item) => (
+                            <FormField
+                              key={item.id}
+                              control={form.control}
+                              name="healthConditions"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(item.id)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, item.id])
+                                            : field.onChange(field.value?.filter((value) => value !== item.id))
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">{item.label}</FormLabel>
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          ))}
+                        </div>
+                        {showOtherHealthCondition && (
+                          <FormField
+                            control={form.control}
+                            name="otherHealthCondition"
+                            render={({ field }) => (
+                              <FormItem className="mt-2">
+                                <FormLabel>Please specify other health condition</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter health condition" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormDescription>
-                          This helps us tailor your nutrition plan to your health needs
-                        </FormDescription>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </TabsContent>
-                
+
                 <TabsContent value="dietary" className="space-y-4 mt-0">
                   <FormField
                     control={form.control}
                     name="dietaryPreferences"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
-                        <FormLabel>Dietary Preferences</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select dietary preference" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="vegetarian">Vegetarian</SelectItem>
-                            <SelectItem value="vegan">Vegan</SelectItem>
-                            <SelectItem value="keto">Keto</SelectItem>
-                            <SelectItem value="paleo">Paleo</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="mb-4">
+                          <FormLabel className="text-base">Dietary Preferences</FormLabel>
+                          <FormDescription>Select all dietary preferences that apply to you</FormDescription>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {dietaryPreferences.map((item) => (
+                            <FormField
+                              key={item.id}
+                              control={form.control}
+                              name="dietaryPreferences"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(item.id)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, item.id])
+                                            : field.onChange(field.value?.filter((value) => value !== item.id))
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">{item.label}</FormLabel>
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          ))}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
-                    name="dietaryRestrictions"
+                    name="religiousRestrictions"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Dietary Restrictions</FormLabel>
+                        <FormLabel>Religious Dietary Restrictions</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Enter any dietary restrictions" 
-                            className="resize-none" 
-                            {...field} 
+                          <Textarea
+                            placeholder="Enter any dietary restrictions according to religious specifications"
+                            className="resize-none"
+                            {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Foods you avoid for cultural, religious, or personal reasons
-                        </FormDescription>
+                        <FormDescription>Foods you avoid for religious reasons</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
-                    name="foodAllergies"
-                    render={({ field }) => (
+                    name="allergens"
+                    render={() => (
                       <FormItem>
-                        <FormLabel>Food Allergies / Intolerances</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="e.g., gluten, lactose, nuts" 
-                            className="resize-none" 
-                            {...field} 
+                        <div className="mb-4">
+                          <FormLabel className="text-base">Food Allergies / Intolerances</FormLabel>
+                          <FormDescription>Select all allergens that apply to you</FormDescription>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {allergens.map((item) => (
+                            <FormField
+                              key={item.id}
+                              control={form.control}
+                              name="allergens"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0">
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(item.id)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, item.id])
+                                            : field.onChange(field.value?.filter((value) => value !== item.id))
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">{item.label}</FormLabel>
+                                  </FormItem>
+                                )
+                              }}
+                            />
+                          ))}
+                        </div>
+                        {showOtherAllergen && (
+                          <FormField
+                            control={form.control}
+                            name="otherAllergen"
+                            render={({ field }) => (
+                              <FormItem className="mt-2">
+                                <FormLabel>Please specify other allergen</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter allergen" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="budgetConstraints"
@@ -374,7 +492,7 @@ export default function NutriBot() {
                     )}
                   />
                 </TabsContent>
-                
+
                 <TabsContent value="goals" className="space-y-4 mt-0">
                   <FormField
                     control={form.control}
@@ -398,22 +516,20 @@ export default function NutriBot() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="rounded-lg bg-primary/5 p-4 border border-primary/10">
                     <h3 className="font-medium text-primary mb-2">How NutriBot Works</h3>
                     <p className="text-sm text-muted-foreground">
-                      Our AI analyzes your profile to create a personalized nutrition plan that aligns with your health needs and fitness goals. The plan includes meal suggestions, portion guidance, and nutritional information.
+                      Our AI analyzes your profile to create a personalized nutrition plan that aligns with your health
+                      needs and fitness goals. The plan includes meal suggestions, portion guidance, and nutritional
+                      information.
                     </p>
                   </div>
                 </TabsContent>
               </CardContent>
-              
+
               <CardFooter className="flex justify-end gap-2 pt-2">
-                <Button 
-                  type="submit" 
-                  className="gap-2"
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="gap-2" disabled={isLoading}>
                   {isLoading ? "Generating..." : "Generate Nutrition Plan"}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -422,7 +538,7 @@ export default function NutriBot() {
           </form>
         </Form>
       </Card>
-      
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
@@ -430,9 +546,7 @@ export default function NutriBot() {
               <Utensils className="h-5 w-5 text-primary" />
               Your Personalized Nutrition Plan
             </DialogTitle>
-            <DialogDescription>
-              Based on your health profile and fitness goals
-            </DialogDescription>
+            <DialogDescription>Based on your health profile and fitness goals</DialogDescription>
           </DialogHeader>
           <div className="text-sm text-foreground p-4 border rounded-lg bg-card overflow-y-auto max-h-[60vh]">
             {isLoading ? (
@@ -451,3 +565,4 @@ export default function NutriBot() {
     </div>
   )
 }
+
