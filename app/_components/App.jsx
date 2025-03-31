@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useRouter } from "next/navigation"
 
 const healthConditions = [
   { id: "type2diabetes", label: "Type 2 Diabetes" },
@@ -67,7 +68,8 @@ const formSchema = z.object({
   fitnessGoals: z.string().min(1, { message: "Fitness goal is required" }),
 })
 
-export default function NutriBot() {
+export default function NutriBot({setOpen}) {
+  const router = useRouter()
   const [dietPlanText, setDietPlanText] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -133,7 +135,7 @@ export default function NutriBot() {
         setDietPlanText(plan)
         // Store the plan in local storage for later use
         localStorage.setItem("dietPlan", JSON.stringify(plan))
-
+        localStorage.setItem("profile",JSON.stringify(data))
         localStorage.setItem("gender", data.gender) // "male" / "female" / ...
         localStorage.setItem("userAge", data.age) // e.g. "5"
         localStorage.setItem("userHeight", data.height) // e.g. "110" (cm)
@@ -557,7 +559,18 @@ export default function NutriBot() {
                 </div>
               </div>
             ) : (
-              <div dangerouslySetInnerHTML={{ __html: dietPlanText }} />
+              // <div dangerouslySetInnerHTML={{ __html: dietPlanText }} />
+              
+                dietPlanText &&  (<Button type="button" className="gap-2" onClick={() => {
+                  router.push('/test');
+                  setIsDialogOpen(false);
+                  setOpen(false);
+                }}
+                 >
+               Show Generated Plan
+                <ArrowRight className="h-4 w-4" />
+              </Button>)
+              
             )}
           </div>
         </DialogContent>

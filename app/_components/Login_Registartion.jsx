@@ -18,7 +18,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "sonner"
+import { toast , Toaster} from "sonner"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -97,6 +97,7 @@ export default function AuthDialog() {
     const token = localStorage.getItem("authToken")
     if (token) {
       const decodedToken = decodeJWT(token)
+      console.log(decodedToken,'fix')
       if (decodedToken && decodedToken.email) {
         setIsLoggedIn(true)
         setUserEmail(decodedToken.email)
@@ -161,18 +162,11 @@ export default function AuthDialog() {
         setUserInitial(decodedToken.email.charAt(0).toUpperCase())
       }
 
-      toast({
-        title: "Login successful",
-        description: "You have been logged in successfully.",
-      })
+      toast('Logged In Successfully')
 
       setOpen(false)
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
-        variant: "destructive",
-      })
+      toast("Login failed")
     } finally {
       setIsLoading(false)
     }
@@ -214,20 +208,13 @@ export default function AuthDialog() {
         throw new Error(result.message || "Registration failed")
       }
 
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created successfully.",
-      })
+      toast("Registration successful")
 
       // Switch to login tab after successful registration
       setActiveTab("login")
       registerForm.reset()
     } catch (error) {
-      toast({
-        title: "Registration failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
-        variant: "destructive",
-      })
+      toast("Registration failed")
     } finally {
       setIsLoading(false)
     }
@@ -240,14 +227,12 @@ export default function AuthDialog() {
     setUserEmail("")
     setUserInitial("")
 
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully.",
-    })
+    toast("Logged Out")
   }
   console.log(isLoggedIn, "hi")
   return (
     <>
+    {/* <Toaster/> */}
       {isLoggedIn ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
