@@ -87,9 +87,9 @@ const Header = () => {
     </div> */}
   </div>
   <div className='flex gap-2'>
-    <h2 className='flex gap-2 items-center'>
+    {/* <h2 className='flex gap-2 items-center'>
       <ShoppingBag /> 0
-    </h2>
+    </h2> */}
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {pathname === '/' && (

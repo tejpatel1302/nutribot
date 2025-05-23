@@ -562,7 +562,7 @@ export default function NutriBot({setOpen}) {
               // <div dangerouslySetInnerHTML={{ __html: dietPlanText }} />
               
                 dietPlanText &&  (<Button type="button" className="gap-2" onClick={() => {
-                  router.push('/test');
+                  router.push('/diet-plan');
                   setIsDialogOpen(false);
                   setOpen(false);
                 }}

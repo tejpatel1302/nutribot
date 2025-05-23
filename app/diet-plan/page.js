@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Beef,
   Droplets,
@@ -10,67 +10,84 @@ import {
   Moon,
   ShoppingBag,
   Utensils,
-  Save,
   Edit,
   Check,
-} from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast, Toaster } from "sonner"
-import { MealPlanManager } from "./meal-plan-manager"
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { MealPlanManager } from "./meal-plan-manager";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function WeightLossPlan() {
   // User profile state
 
-  const [profile, setProfile] = useState({})
-  console.log(profile, "test")
+  const [profile, setProfile] = useState({});
+  console.log(profile, "test");
   // API-generated diet plan state
-  const [dietPlan, setDietPlan] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [dietPlan, setDietPlan] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Editable profile state
-  const [isEditing, setIsEditing] = useState(false)
-  const [editableProfile, setEditableProfile] = useState({ ...profile })
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableProfile, setEditableProfile] = useState({
+    ...profile,
+    dietaryPreferences: profile.dietaryPreferences || [],
+  });
 
   // Dialog state
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   useEffect(() => {
-    const storedPlan = localStorage.getItem("dietPlan")
-    const storedProfile = typeof window !== "undefined" ? localStorage.getItem("profile") : null
+    const storedPlan = localStorage.getItem("dietPlan");
+    const storedProfile =
+      typeof window !== "undefined" ? localStorage.getItem("profile") : null;
     if (storedPlan) {
       try {
-        const parsedPlan = JSON.parse(storedPlan)
-        const parsedProfile = JSON.parse(storedProfile)
-        setDietPlan(parsedPlan)
-        setProfile(parsedProfile)
+        const parsedPlan = JSON.parse(storedPlan);
+        const parsedProfile = JSON.parse(storedProfile);
+        setDietPlan(parsedPlan);
+        setProfile(parsedProfile);
       } catch (error) {
-        console.error("Error parsing stored diet plan:", error)
+        console.error("Error parsing stored diet plan:", error);
       }
     }
-  }, [])
+  }, []);
   // Calorie needs state (fallback in case API isn’t loaded yet)
   const [calorieNeeds, setCalorieNeeds] = useState({
     bmr: 0,
     maintenance: 0,
     target: 0,
-  })
+  });
 
   // Calculate BMR using Mifflin-St Jeor Equation
   const calculateBMR = () => {
-    const { weight, height, gender, age } = profile
-    let bmr = 0
+    const { weight, height, gender, age } = profile;
+    let bmr = 0;
     if (gender === "male") {
-      bmr = 10 * weight + 6.25 * height - 5 * age + 5
+      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
     } else {
-      bmr = 10 * weight + 6.25 * height - 5 * age - 161
+      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
     }
-    return Math.round(bmr)
-  }
+    return Math.round(bmr);
+  };
 
   // Calculate maintenance calories
   const calculateMaintenance = (bmr) => {
@@ -80,46 +97,48 @@ export default function WeightLossPlan() {
       moderate: 1.55,
       active: 1.725,
       veryActive: 1.9,
-    }
-    return Math.round(bmr * activityMultipliers[profile.activityLevel])
-  }
+    };
+    return Math.round(bmr * activityMultipliers[profile.activityLevel]);
+  };
 
   // Calculate target calories (e.g. 500 calorie deficit)
   const calculateTarget = (maintenance) => {
-    return Math.max(1200, maintenance - 500) // Ensure minimum of 1200 calories
-  }
+    return Math.max(1200, maintenance - 500); // Ensure minimum of 1200 calories
+  };
 
   // Update calorie calculations when profile changes
   useEffect(() => {
-    const bmr = calculateBMR()
-    const maintenance = calculateMaintenance(bmr)
-    const target = calculateTarget(maintenance)
-    setCalorieNeeds({ bmr, maintenance, target })
-  }, [profile])
+    const bmr = calculateBMR();
+    const maintenance = calculateMaintenance(bmr);
+    const target = calculateTarget(maintenance);
+    setCalorieNeeds({ bmr, maintenance, target });
+  }, [profile]);
 
   // Handle profile edit
   const handleEditProfile = () => {
     if (isEditing) {
-      setProfile(editableProfile)
-      setIsEditing(false)
-      toast("Profile updated")
+      setProfile(editableProfile);
+      setIsEditing(false);
+      // Save to localStorage when profile is updated
+      localStorage.setItem("profile", JSON.stringify(editableProfile));
+      toast("Profile updated");
     } else {
-      setEditableProfile({ ...profile })
-      setIsEditing(true)
+      setEditableProfile({ ...profile });
+      setIsEditing(true);
     }
-  }
+  };
 
   // Handle profile field change
   const handleProfileChange = (field, value) => {
     setEditableProfile((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   // Fetch diet plan from API based on user profile
   const fetchDietPlan = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     // Build query parameters from profile state.
     // Note: converting units if needed (here we assume the API expects kg/cm for weight/height)
     const queryParams = new URLSearchParams({
@@ -135,37 +154,39 @@ export default function WeightLossPlan() {
       foodAllergies: "", // if any
       fitnessGoals: "weight loss", // default goal
       disease: "", // if any
-    })
+    });
     try {
-      const res = await fetch(`http://localhost:3001/dietPlan?${queryParams.toString()}`)
-      if (!res.ok) throw new Error("API request failed")
-      const data = await res.json()
-      setDietPlan(data)
+      const res = await fetch(
+        `http://localhost:3001/dietPlan?${queryParams.toString()}`
+      );
+      if (!res.ok) throw new Error("API request failed");
+      const data = await res.json();
+      setDietPlan(data);
       // Also update calorieNeeds if available from API response
-      if (data?.calorieNeeds) setCalorieNeeds(data.calorieNeeds)
-      toast("Diet plan generated!")
+      if (data?.calorieNeeds) setCalorieNeeds(data.calorieNeeds);
+      toast("Diet plan generated!");
     } catch (error) {
-      console.error("Error fetching diet plan:", error)
-      toast.error("Failed to generate diet plan.")
+      console.error("Error fetching diet plan:", error);
+      toast.error("Failed to generate diet plan.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // useEffect to load plan from localStorage on mount (optional)
 
   // Save plan to localStorage (simulate saving to a database)
   const saveMealPlan = () => {
     if (dietPlan) {
-      localStorage.setItem("dietPlan", JSON.stringify(dietPlan))
-      toast("Meal plan saved")
+      localStorage.setItem("dietPlan", JSON.stringify(dietPlan));
+      toast("Meal plan saved");
     }
-  }
-
+  };
+  console.log(profile.dietaryPreferences, "testdeit");
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <Toaster />
-      <h1 className="text-3xl font-bold text-center mb-8">Personalized Weight Loss Plan</h1>
+      {/* <Toaster />
+      <h1 className="text-3xl font-bold text-center mb-8">Personalized Weight Loss Plan</h1> */}
 
       {/* Profile Card */}
       <Card className="mb-8">
@@ -174,7 +195,12 @@ export default function WeightLossPlan() {
             <Info className="h-5 w-5" />
             <CardTitle>Your Profile</CardTitle>
           </div>
-          <Button variant="outline" size="sm" onClick={handleEditProfile} className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEditProfile}
+            className="flex items-center gap-1"
+          >
             {isEditing ? (
               <>
                 <Check className="h-4 w-4" />
@@ -198,7 +224,9 @@ export default function WeightLossPlan() {
                     id="weight"
                     type="number"
                     value={editableProfile.weight}
-                    onChange={(e) => handleProfileChange("weight", Number(e.target.value))}
+                    onChange={(e) =>
+                      handleProfileChange("weight", Number(e.target.value))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -207,7 +235,9 @@ export default function WeightLossPlan() {
                     id="height"
                     type="number"
                     value={editableProfile.height}
-                    onChange={(e) => handleProfileChange("height", Number(e.target.value))}
+                    onChange={(e) =>
+                      handleProfileChange("height", Number(e.target.value))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -216,14 +246,18 @@ export default function WeightLossPlan() {
                     id="age"
                     type="number"
                     value={editableProfile.age}
-                    onChange={(e) => handleProfileChange("age", Number(e.target.value))}
+                    onChange={(e) =>
+                      handleProfileChange("age", Number(e.target.value))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="budgetConstraints">Budget Constraints</Label>
                   <Select
                     value={editableProfile.budgetConstraints}
-                    onValueChange={(value) => handleProfileChange("budgetConstraints", value)}
+                    onValueChange={(value) =>
+                      handleProfileChange("budgetConstraints", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select budget" />
@@ -236,11 +270,18 @@ export default function WeightLossPlan() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="religiousRestrictions">Religious Restrictions</Label>
+                  <Label htmlFor="religiousRestrictions">
+                    Religious Restrictions
+                  </Label>
                   <Input
                     id="religiousRestrictions"
                     value={editableProfile.religiousRestrictions || ""}
-                    onChange={(e) => handleProfileChange("religiousRestrictions", e.target.value)}
+                    onChange={(e) =>
+                      handleProfileChange(
+                        "religiousRestrictions",
+                        e.target.value
+                      )
+                    }
                     placeholder="Any religious dietary restrictions"
                   />
                 </div>
@@ -250,7 +291,9 @@ export default function WeightLossPlan() {
                   <Label htmlFor="gender">Gender</Label>
                   <Select
                     value={editableProfile.gender}
-                    onValueChange={(value) => handleProfileChange("gender", value)}
+                    onValueChange={(value) =>
+                      handleProfileChange("gender", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select gender" />
@@ -266,15 +309,23 @@ export default function WeightLossPlan() {
                   <Label htmlFor="bodyType">Body Type</Label>
                   <Select
                     value={editableProfile.bodyType}
-                    onValueChange={(value) => handleProfileChange("bodyType", value)}
+                    onValueChange={(value) =>
+                      handleProfileChange("bodyType", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select body type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ectomorph">Ectomorph (Slim)</SelectItem>
-                      <SelectItem value="mesomorph">Mesomorph (Athletic)</SelectItem>
-                      <SelectItem value="endomorph">Endomorph (Rounded)</SelectItem>
+                      <SelectItem value="ectomorph">
+                        Ectomorph (Slim)
+                      </SelectItem>
+                      <SelectItem value="mesomorph">
+                        Mesomorph (Athletic)
+                      </SelectItem>
+                      <SelectItem value="endomorph">
+                        Endomorph (Rounded)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -282,7 +333,9 @@ export default function WeightLossPlan() {
                   <Label htmlFor="activityLevel">Activity Level</Label>
                   <Select
                     value={editableProfile.activityLevel}
-                    onValueChange={(value) => handleProfileChange("activityLevel", value)}
+                    onValueChange={(value) =>
+                      handleProfileChange("activityLevel", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select activity level" />
@@ -297,31 +350,62 @@ export default function WeightLossPlan() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dietaryPreferences">Dietary Preferences</Label>
-                  <Select
-                    value={editableProfile.dietaryPreferences || ""}
-                    onValueChange={(value) => handleProfileChange("dietaryPreferences", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select dietary preference" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="vegetarian">Vegetarian</SelectItem>
-                      <SelectItem value="non-vegetarian">Non-Vegetarian</SelectItem>
-                      <SelectItem value="vegan">Vegan</SelectItem>
-                      <SelectItem value="keto">Keto</SelectItem>
-                      <SelectItem value="paleo">Paleo</SelectItem>
-                      <SelectItem value="mediterranean">Mediterranean</SelectItem>
-                      <SelectItem value="glutenfree">Gluten-Free</SelectItem>
-                      <SelectItem value="dairyfree">Dairy-Free</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="dietaryPreferences">
+                    Dietary Preferences
+                  </Label>
+                  <div className="grid grid-cols-1 gap-2 mt-1">
+                    {[
+                      { id: "vegetarian", label: "Vegetarian" },
+                      { id: "non-vegetarian", label: "Non-Vegetarian" },
+                      { id: "vegan", label: "Vegan" },
+                      { id: "keto", label: "Keto" },
+                      { id: "paleo", label: "Paleo" },
+                      { id: "mediterranean", label: "Mediterranean" },
+                      { id: "glutenfree", label: "Gluten-Free" },
+                      { id: "dairyfree", label: "Dairy-Free" },
+                    ].map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={`diet-${item.id}`}
+                          checked={editableProfile.dietaryPreferences?.includes(
+                            item.id
+                          )}
+                          onCheckedChange={(checked) => {
+                            const currentPrefs =
+                              editableProfile.dietaryPreferences || [];
+                            if (checked) {
+                              handleProfileChange("dietaryPreferences", [
+                                ...currentPrefs,
+                                item.id,
+                              ]);
+                            } else {
+                              handleProfileChange(
+                                "dietaryPreferences",
+                                currentPrefs.filter((pref) => pref !== item.id)
+                              );
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`diet-${item.id}`}
+                          className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {item.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fitnessGoals">Fitness Goals</Label>
                   <Select
                     value={editableProfile.fitnessGoals || "weight loss"}
-                    onValueChange={(value) => handleProfileChange("fitnessGoals", value)}
+                    onValueChange={(value) =>
+                      handleProfileChange("fitnessGoals", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a goal" />
@@ -338,10 +422,11 @@ export default function WeightLossPlan() {
                   <Input
                     id="feedback"
                     value={editableProfile.feedback || ""}
-                    onChange={(e) => handleProfileChange("feedback", e.target.value)}
+                    onChange={(e) =>
+                      handleProfileChange("feedback", e.target.value)
+                    }
                     placeholder="Any feedback on your current plan"
                   />
-                  
                 </div>
               </div>
             </div>
@@ -387,8 +472,12 @@ export default function WeightLossPlan() {
                 <Badge variant="outline" className="px-2 py-1 text-xs">
                   Dietary Preferences
                 </Badge>
-                <span className="capitalize">{profile.dietaryPreferences}</span>
+                <span className="capitalize">
+                  {profile.dietaryPreferences?.[0]}
+                  {profile.dietaryPreferences?.length > 1 && "..."}
+                </span>
               </div>
+
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="px-2 py-1 text-xs">
                   Budget
@@ -399,7 +488,9 @@ export default function WeightLossPlan() {
                 <Badge variant="outline" className="px-2 py-1 text-xs">
                   Fitness Goals
                 </Badge>
-                <span className="capitalize">{profile.fitnessGoals || "Weight Loss"}</span>
+                <span className="capitalize">
+                  {profile.fitnessGoals || "Weight Loss"}
+                </span>
               </div>
               {profile.religiousRestrictions && (
                 <div className="flex items-center gap-2">
@@ -426,24 +517,31 @@ export default function WeightLossPlan() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="p-4 bg-muted/30 rounded-lg text-center">
               <h3 className="text-sm font-medium mb-1">BMR</h3>
-              <p className="text-2xl font-bold">{dietPlan?.calorieNeeds?.bmr || calorieNeeds.bmr} cal</p>
+              <p className="text-2xl font-bold">
+                {dietPlan?.calorieNeeds?.bmr || calorieNeeds.bmr} cal
+              </p>
               <p className="text-xs mt-1">At Rest</p>
             </div>
             <div className="p-4 bg-muted/30 rounded-lg text-center">
               <h3 className="text-sm font-medium mb-1">Maintenance</h3>
               <p className="text-2xl font-bold">
-                {dietPlan?.calorieNeeds?.maintenance || calorieNeeds.maintenance} cal
+                {dietPlan?.calorieNeeds?.maintenance ||
+                  calorieNeeds.maintenance}{" "}
+                cal
               </p>
               <p className="text-xs mt-1">To Maintain Weight</p>
             </div>
             <div className="p-4 bg-primary/10 rounded-lg text-center">
               <h3 className="text-sm font-medium mb-1">Target</h3>
-              <p className="text-2xl font-bold">{dietPlan?.calorieNeeds?.target || calorieNeeds.target} cal</p>
+              <p className="text-2xl font-bold">
+                {dietPlan?.calorieNeeds?.target || calorieNeeds.target} cal
+              </p>
               <p className="text-xs mt-1">For Weight Loss</p>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            A 500-calorie deficit from your maintenance calories is recommended for gradual weight loss.
+            A 500-calorie deficit from your maintenance calories is recommended
+            for gradual weight loss.
           </p>
         </CardContent>
       </Card>
@@ -467,17 +565,24 @@ export default function WeightLossPlan() {
                   Your Meal Plan
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Total Daily Calories:</span>
+                  <span className="text-sm font-medium">
+                    Total Daily Calories:
+                  </span>
                   <Badge variant="outline" className="text-base font-bold">
                     {dietPlan.mealPlan.breakfast[0]?.calories +
                       dietPlan.mealPlan.lunch[0]?.calories +
                       dietPlan.mealPlan.dinner[0]?.calories +
-                      dietPlan.mealPlan.snacks.reduce((acc, snack) => acc + snack.calories, 0)}{" "}
+                      dietPlan.mealPlan.snacks.reduce(
+                        (acc, snack) => acc + snack.calories,
+                        0
+                      )}{" "}
                     / {dietPlan.calorieNeeds.target} cal
                   </Badge>
                 </div>
               </div>
-              <CardDescription>This plan is generated based on your profile and preferences.</CardDescription>
+              <CardDescription>
+                This plan is generated based on your profile and preferences.
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <Tabs defaultValue="breakfast" className="w-full">
@@ -491,7 +596,9 @@ export default function WeightLossPlan() {
                   {dietPlan.mealPlan.breakfast.map((meal) => (
                     <Card key={meal.id} className="border">
                       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-base">{meal.title}</CardTitle>
+                        <CardTitle className="text-base">
+                          {meal.title}
+                        </CardTitle>
                         <Badge>{meal.calories} cal</Badge>
                       </CardHeader>
                       <CardContent>
@@ -509,9 +616,7 @@ export default function WeightLossPlan() {
                           )}
                         </div>
                       </CardContent>
-                      <CardFooter className="flex justify-end">
-          
-            </CardFooter>
+                      <CardFooter className="flex justify-end"></CardFooter>
                     </Card>
                   ))}
                 </TabsContent>
@@ -519,7 +624,9 @@ export default function WeightLossPlan() {
                   {dietPlan.mealPlan.lunch.map((meal) => (
                     <Card key={meal.id} className="border">
                       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-base">{meal.title}</CardTitle>
+                        <CardTitle className="text-base">
+                          {meal.title}
+                        </CardTitle>
                         <Badge>{meal.calories} cal</Badge>
                       </CardHeader>
                       <CardContent>
@@ -544,7 +651,9 @@ export default function WeightLossPlan() {
                   {dietPlan.mealPlan.dinner.map((meal) => (
                     <Card key={meal.id} className="border">
                       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-base">{meal.title}</CardTitle>
+                        <CardTitle className="text-base">
+                          {meal.title}
+                        </CardTitle>
                         <Badge>{meal.calories} cal</Badge>
                       </CardHeader>
                       <CardContent>
@@ -561,8 +670,15 @@ export default function WeightLossPlan() {
                             </Badge>
                           )}
                           {meal.spicyLevel && (
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {meal.spicyLevel === "low" ? "Mild" : meal.spicyLevel === "medium" ? "Medium" : "Spicy"}
+                            <Badge
+                              variant="outline"
+                              className="text-xs capitalize"
+                            >
+                              {meal.spicyLevel === "low"
+                                ? "Mild"
+                                : meal.spicyLevel === "medium"
+                                ? "Medium"
+                                : "Spicy"}
                             </Badge>
                           )}
                         </div>
@@ -574,7 +690,9 @@ export default function WeightLossPlan() {
                   {dietPlan.mealPlan.snacks.map((snack) => (
                     <Card key={snack.id} className="border">
                       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-base">{snack.title}</CardTitle>
+                        <CardTitle className="text-base">
+                          {snack.title}
+                        </CardTitle>
                         <Badge>{snack.calories} cal</Badge>
                       </CardHeader>
                       <CardContent>
@@ -598,7 +716,12 @@ export default function WeightLossPlan() {
               </Tabs>
             </CardContent>
             <CardFooter className="flex justify-end">
-            {dietPlan && <MealPlanManager dietPlan={dietPlan} onSaveMealPlan={saveMealPlan} />}
+              {dietPlan && (
+                <MealPlanManager
+                  dietPlan={dietPlan}
+                  onSaveMealPlan={saveMealPlan}
+                />
+              )}
             </CardFooter>
           </Card>
 
@@ -609,10 +732,14 @@ export default function WeightLossPlan() {
                 <ShoppingBag className="h-5 w-5" />
                 Shopping List
               </CardTitle>
-              <CardDescription>Based on your plan, here are the items you need.</CardDescription>
+              <CardDescription>
+                Based on your plan, here are the items you need.
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              {dietPlan && <ShoppingListGenerator mealPlan={dietPlan.mealPlan} />}
+              {dietPlan && (
+                <ShoppingListGenerator mealPlan={dietPlan.mealPlan} />
+              )}
             </CardContent>
           </Card>
 
@@ -629,21 +756,43 @@ export default function WeightLossPlan() {
                 {dietPlan.tips && dietPlan.tips.length > 0 ? (
                   dietPlan.tips.slice(0, 4).map((tip, index) => {
                     const icons = [
-                      <Droplets key="droplets" className="h-5 w-5 text-primary shrink-0 mt-0.5" />,
-                      <HeartPulse key="heartpulse" className="h-5 w-5 text-primary shrink-0 mt-0.5" />,
-                      <Moon key="moon" className="h-5 w-5 text-primary shrink-0 mt-0.5" />,
-                      <Beef key="beef" className="h-5 w-5 text-primary shrink-0 mt-0.5" />,
-                    ]
-                    const titles = ["Hydration", "Exercise", "Sleep", "Cook at Home"]
+                      <Droplets
+                        key="droplets"
+                        className="h-5 w-5 text-primary shrink-0 mt-0.5"
+                      />,
+                      <HeartPulse
+                        key="heartpulse"
+                        className="h-5 w-5 text-primary shrink-0 mt-0.5"
+                      />,
+                      <Moon
+                        key="moon"
+                        className="h-5 w-5 text-primary shrink-0 mt-0.5"
+                      />,
+                      <Beef
+                        key="beef"
+                        className="h-5 w-5 text-primary shrink-0 mt-0.5"
+                      />,
+                    ];
+                    const titles = [
+                      "Hydration",
+                      "Exercise",
+                      "Sleep",
+                      "Cook at Home",
+                    ];
                     return (
-                      <div key={index} className="flex gap-3 p-4 rounded-lg bg-muted/30">
+                      <div
+                        key={index}
+                        className="flex gap-3 p-4 rounded-lg bg-muted/30"
+                      >
                         {icons[index % icons.length]}
                         <div>
-                          <h3 className="font-medium mb-1">{titles[index % titles.length]}</h3>
+                          <h3 className="font-medium mb-1">
+                            {titles[index % titles.length]}
+                          </h3>
                           <p className="text-sm">{tip}</p>
                         </div>
                       </div>
-                    )
+                    );
                   })
                 ) : (
                   <>
@@ -651,14 +800,18 @@ export default function WeightLossPlan() {
                       <Droplets className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                       <div>
                         <h3 className="font-medium mb-1">Hydration</h3>
-                        <p className="text-sm">Drink plenty of water throughout the day.</p>
+                        <p className="text-sm">
+                          Drink plenty of water throughout the day.
+                        </p>
                       </div>
                     </div>
                     <div className="flex gap-3 p-4 rounded-lg bg-muted/30">
                       <HeartPulse className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                       <div>
                         <h3 className="font-medium mb-1">Exercise</h3>
-                        <p className="text-sm">Aim for at least 30 minutes of activity most days.</p>
+                        <p className="text-sm">
+                          Aim for at least 30 minutes of activity most days.
+                        </p>
                       </div>
                     </div>
                   </>
@@ -674,7 +827,9 @@ export default function WeightLossPlan() {
                 <Utensils className="h-5 w-5" />
                 Recipe Videos
               </CardTitle>
-              <CardDescription>Watch videos to learn how to prepare meals from your plan</CardDescription>
+              <CardDescription>
+                Watch videos to learn how to prepare meals from your plan
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <Tabs defaultValue="breakfast" className="w-full">
@@ -685,16 +840,28 @@ export default function WeightLossPlan() {
                   <TabsTrigger value="snacks">Snacks</TabsTrigger>
                 </TabsList>
                 <TabsContent value="breakfast">
-                  <RecipeVideoList mealType="breakfast" meals={dietPlan.mealPlan.breakfast} />
+                  <RecipeVideoList
+                    mealType="breakfast"
+                    meals={dietPlan.mealPlan.breakfast}
+                  />
                 </TabsContent>
                 <TabsContent value="lunch">
-                  <RecipeVideoList mealType="lunch" meals={dietPlan.mealPlan.lunch} />
+                  <RecipeVideoList
+                    mealType="lunch"
+                    meals={dietPlan.mealPlan.lunch}
+                  />
                 </TabsContent>
                 <TabsContent value="dinner">
-                  <RecipeVideoList mealType="dinner" meals={dietPlan.mealPlan.dinner} />
+                  <RecipeVideoList
+                    mealType="dinner"
+                    meals={dietPlan.mealPlan.dinner}
+                  />
                 </TabsContent>
                 <TabsContent value="snacks">
-                  <RecipeVideoList mealType="snacks" meals={dietPlan.mealPlan.snacks} />
+                  <RecipeVideoList
+                    mealType="snacks"
+                    meals={dietPlan.mealPlan.snacks}
+                  />
                 </TabsContent>
               </Tabs>
             </CardContent>
@@ -712,11 +879,11 @@ export default function WeightLossPlan() {
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 const RecipeVideoList = ({ mealType, meals }) => {
-    console.log(meals,'meals cjec')
+  console.log(meals, "meals cjec");
   return (
     <div className="space-y-4">
       {meals.map((meal) => (
@@ -730,60 +897,72 @@ const RecipeVideoList = ({ mealType, meals }) => {
           <CardContent>
             <div className="aspect-video bg-muted rounded-md overflow-hidden">
               <iframe
-                src={`https://www.youtube.com/embed?search=how+to+make+${encodeURIComponent(meal.title)}&color=white`}
+                src={`https://www.youtube.com/embed?search=how+to+make+${encodeURIComponent(
+                  meal.title
+                )}&color=white`}
                 title={`${meal.title} Recipe Video`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="w-full h-full"
               />
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">Watch how to prepare {meal.title}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Watch how to prepare {meal.title}
+            </p>
           </CardContent>
         </Card>
       ))}
     </div>
-  )
-}
+  );
+};
 
 const ShoppingListGenerator = ({ mealPlan }) => {
   // Extract all ingredients from the meal plan
   const extractIngredients = () => {
-    const allIngredients = []
+    const allIngredients = [];
 
     // Process breakfast meals
     mealPlan.breakfast.forEach((meal) => {
       if (meal.ingredients) {
-        const ingredients = meal.ingredients.split(",").map((item) => item.trim())
-        allIngredients.push(...ingredients)
+        const ingredients = meal.ingredients
+          .split(",")
+          .map((item) => item.trim());
+        allIngredients.push(...ingredients);
       }
-    })
+    });
 
     // Process lunch meals
     mealPlan.lunch.forEach((meal) => {
       if (meal.ingredients) {
-        const ingredients = meal.ingredients.split(",").map((item) => item.trim())
-        allIngredients.push(...ingredients)
+        const ingredients = meal.ingredients
+          .split(",")
+          .map((item) => item.trim());
+        allIngredients.push(...ingredients);
       }
-    })
+    });
 
     // Process dinner meals
     mealPlan.dinner.forEach((meal) => {
       if (meal.ingredients) {
-        const ingredients = meal.ingredients.split(",").map((item) => item.trim())
-        allIngredients.push(...ingredients)
+        const ingredients = meal.ingredients
+          .split(",")
+          .map((item) => item.trim());
+        allIngredients.push(...ingredients);
       }
-    })
+    });
 
     // Process snacks
     mealPlan.snacks.forEach((snack) => {
       if (snack.ingredients) {
-        const ingredients = snack.ingredients.split(",").map((item) => item.trim())
-        allIngredients.push(...ingredients)
+        const ingredients = snack.ingredients
+          .split(",")
+          .map((item) => item.trim());
+        allIngredients.push(...ingredients);
       }
-    })
+    });
 
-    return allIngredients
-  }
+    return allIngredients;
+  };
 
   // Categorize ingredients
   const categorizeIngredients = (ingredients) => {
@@ -795,7 +974,7 @@ const ShoppingListGenerator = ({ mealPlan }) => {
       pantry: [],
       spices: [],
       other: [],
-    }
+    };
 
     // Define category keywords
     const categoryKeywords = {
@@ -850,7 +1029,16 @@ const ShoppingListGenerator = ({ mealPlan }) => {
         "meat",
         "protein",
       ],
-      dairy: ["milk", "cheese", "yogurt", "butter", "cream", "yoghurt", "curd", "dairy"],
+      dairy: [
+        "milk",
+        "cheese",
+        "yogurt",
+        "butter",
+        "cream",
+        "yoghurt",
+        "curd",
+        "dairy",
+      ],
       grains: [
         "rice",
         "pasta",
@@ -908,56 +1096,56 @@ const ShoppingListGenerator = ({ mealPlan }) => {
         "powder",
         "seasoning",
       ],
-    }
+    };
 
     // Categorize each ingredient
     ingredients.forEach((ingredient) => {
-      const lowerIngredient = ingredient.toLowerCase()
-      let categorized = false
+      const lowerIngredient = ingredient.toLowerCase();
+      let categorized = false;
 
       for (const [category, keywords] of Object.entries(categoryKeywords)) {
         if (keywords.some((keyword) => lowerIngredient.includes(keyword))) {
-          categories[category].push(ingredient)
-          categorized = true
-          break
+          categories[category].push(ingredient);
+          categorized = true;
+          break;
         }
       }
 
       if (!categorized) {
-        categories.other.push(ingredient)
+        categories.other.push(ingredient);
       }
-    })
+    });
 
-    return categories
-  }
+    return categories;
+  };
 
   // Get unique ingredients (remove duplicates)
   const getUniqueIngredients = (ingredients) => {
-    const uniqueIngredients = {}
+    const uniqueIngredients = {};
 
     ingredients.forEach((ingredient) => {
       // Skip very short ingredients (likely not valid)
-      if (ingredient.length < 2) return
+      if (ingredient.length < 2) return;
 
       // Check if this ingredient is already in our list
-      const key = ingredient.toLowerCase()
+      const key = ingredient.toLowerCase();
       if (!uniqueIngredients[key]) {
-        uniqueIngredients[key] = ingredient
+        uniqueIngredients[key] = ingredient;
       }
-    })
+    });
 
-    return Object.values(uniqueIngredients)
-  }
+    return Object.values(uniqueIngredients);
+  };
 
   // Main processing
-  const allIngredients = extractIngredients()
-  const uniqueIngredients = getUniqueIngredients(allIngredients)
-  const categorizedIngredients = categorizeIngredients(uniqueIngredients)
+  const allIngredients = extractIngredients();
+  const uniqueIngredients = getUniqueIngredients(allIngredients);
+  const categorizedIngredients = categorizeIngredients(uniqueIngredients);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {Object.entries(categorizedIngredients).map(([category, items]) => {
-        if (items.length === 0) return null
+        if (items.length === 0) return null;
 
         return (
           <div key={category}>
@@ -968,9 +1156,8 @@ const ShoppingListGenerator = ({ mealPlan }) => {
               ))}
             </ul>
           </div>
-        )
+        );
       })}
     </div>
-  )
-}
-
+  );
+};
