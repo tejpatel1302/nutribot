@@ -874,9 +874,9 @@ export default function WeightLossPlan() {
         <Button onClick={fetchDietPlan} className="px-8">
           {isLoading ? "Generating..." : "Regenerate Plan"}
         </Button>
-        <Button className="px-8" onClick={saveMealPlan}>
+        {/* <Button className="px-8" onClick={saveMealPlan}>
           Save Plan
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
